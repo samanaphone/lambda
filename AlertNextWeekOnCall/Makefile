@@ -4,6 +4,7 @@ CONF_PATH=$(PACKAGE_PATH)/../etc
 ARN=$(shell cat $(CONF_PATH)/role_arn.txt)
 TIMEOUT=$(shell cat $(CONF_PATH)/timeout.txt)
 VARIABLES=$(shell cat $(CONF_PATH)/variables.txt)
+FUNCTION_ARN=$(shell aws lambda get-function --function-name AlertNextWeekOnCall | jq ".Configuration.FunctionArn")
 
 $(FUNCTION_NAME): lib/pypodio2
 	zip -r $(FUNCTION_NAME).zip * -x Makefile $(FUNCTION_NAME).zip
@@ -20,6 +21,16 @@ lib:
 
 lib/pypodio2: lib
 	pip install pypodio2 -t lib
+
+cron:
+	aws events put-rule \
+          --name CallCron \
+          --schedule-expression "rate(1 day)" \
+          --state ENABLED \
+          --description ""
+	aws events put-targets \
+          --rule CallCron \
+          --targets "Id"="Id119354657930","Arn"="$(FUNCTION_ARN)"
 
 config:
 	aws lambda update-function-configuration \
@@ -40,4 +51,5 @@ print:
 	echo $(ARN)
 	echo $(TIMEOUT)
 	echo $(VARIABLES)
+	echo $(FUNCTION_ARN)
 
