@@ -14,7 +14,6 @@ def handler(event, context):
                 "Key": "Config" 
             })['Item']['Value']
 
-        db = boto3.resource('dynamodb', region_name='us-east-1')
         out = db.Table(config['outboundQueueTable']).scan()
         count = out['Count']
     except Exception as e:
