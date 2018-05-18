@@ -15,7 +15,6 @@ def handler(event, context):
                 "Key": "Config" 
             })['Item']['Value']
 
-        db = boto3.resource('dynamodb', region_name='us-east-1')
         out = db.Table(config['InboundQueueTable']).scan()
         if out['Count'] == 0: return 0
 
