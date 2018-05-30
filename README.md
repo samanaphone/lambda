@@ -1,5 +1,4 @@
-# lambda
-Samana TechSupport call management with Nexmo
+# Samana TechSupport call management with Nexmo
 
 
 INSTALL
