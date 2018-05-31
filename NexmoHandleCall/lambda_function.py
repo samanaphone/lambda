@@ -33,7 +33,12 @@ def handler(event, context):
         direction = qs[2]
 
         if action == 'event':
-            action = event['body-json']['status']
+            if 'status' in event['body-json']:
+                action = event['body-json']['status']
+            elif 'type' in event['body-json']:
+                action = event['body-json']['type'].replace(':', '_')
+            else:
+                action = 'undefined'
 
         if action == 'answer':
             nexmodata = event['params']['querystring']
@@ -45,7 +50,11 @@ def handler(event, context):
                 sys._getframe().f_lineno, 
                 "function=%s data=%s" % (function, nexmodata))
 
-        response = ch[function](nexmodata)
+        func = ch.get(function)
+        if func is not None:
+            response = func(nexmodata)
+        else:
+            response = inbound_undefined(nexmodata)
 
     except KeyError as e:
         error(sys._getframe().f_code.co_name, 
@@ -64,6 +73,37 @@ def handler(event, context):
 #########################
 # Inbound Handler
 #########################
+
+def inbound_sip_hangup(nexmodata):
+    debug(sys._getframe().f_code.co_name, 
+            sys._getframe().f_lineno, 
+            json.dumps(nexmodata))
+    if(nexmodata['body']['direction'] == 'outbound'):
+        try:
+            caller_uuid = db.Table(config['outboundCallTable']).get_item(
+                Key={ 'uuid': nexmodata['body']['channel']['id']})['Item']['caller_uuid']
+
+            p = bytearray()
+            p.extend(json.dumps({
+                "nexmoKey": config['nexmoKey'],
+                "nexmoAppID": config['nexmoAppID'],
+                "method": "update_call",
+                "uuid": caller_uuid,
+                "kwargs": {
+                    "action": "hangup"
+                    }
+                }))
+            client = boto3.client('lambda')
+            response = client.invoke(
+                FunctionName='LambdaNexmo',
+                InvocationType='RequestResponse',
+                Payload=p
+                )
+        except Exception as e:
+            error(sys._getframe().f_code.co_name, 
+                sys._getframe().f_lineno, 
+                "Unknown error. %s" % e.args[0])
+    return {}
 
 # Function will onlly log
 def inbound_ringing(nexmodata):
@@ -86,6 +126,12 @@ def inbound_dtmf(nexmodata):
             json.dumps(nexmodata))
     return {}
 
+def inbound_undefined(nexmodata):
+    debug(sys._getframe().f_code.co_name, 
+            sys._getframe().f_lineno, 
+            json.dumps(nexmodata))
+    return {}
+
 def inbound_answer(nexmodata):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
@@ -97,7 +143,7 @@ def inbound_answer(nexmodata):
         },
         {
             "action": "talk",
-            "text": "Please say your name and a phone number after the tone, then press #."
+            "text": config['customerHello']
         },
         {
             "action": "record",
@@ -275,6 +321,13 @@ def outbound_dtmf(nexmodata):
             }]
 
     return response
+
+def outbound_human(nexmodata):
+    debug(sys._getframe().f_code.co_name, 
+            sys._getframe().f_lineno, 
+            json.dumps(nexmodata))
+    db_connect_inbound(nexmodata)
+    return {}
 
 def outbound_answered(nexmodata):
     debug(sys._getframe().f_code.co_name, 
@@ -494,7 +547,7 @@ def db_connect_inbound(nexmodata):
             "start")
     try:
         caller_uuid = db.Table(config['outboundCallTable']).get_item(
-            Key={ 'uuid': nexmodata['uuid']})['Item']['caller_uuid']
+            Key={ 'uuid': nexmodata['call_uuid']})['Item']['caller_uuid']
         db.Table(config['InboundCallTable']).update_item(
             Key                      = { "uuid": caller_uuid },
             UpdateExpression         = "set #a = :a, #s = :s",
@@ -610,6 +663,8 @@ ch = {
     'inbound_answered'   : inbound_answered,
     'inbound_completed'  : inbound_completed,
     'inbound_recording'  : inbound_recording,
+    'inbound_undefined'  : inbound_undefined,
+    'inbound_sip_hangup' : inbound_sip_hangup,
     'outbound_answer'    : outbound_answer,
     'outbound_started'   : outbound_started,
     'outbound_ringing'   : outbound_ringing,
@@ -621,5 +676,7 @@ ch = {
     'outbound_rejected'  : outbound_rejected,
     'outbound_unanswered': outbound_unanswered,
     'outbound_busy'      : outbound_busy,
-    'outbound_dtmf'      : outbound_dtmf
+    'outbound_dtmf'      : outbound_dtmf,
+    'outbound_human'     : outbound_human
 }
+
