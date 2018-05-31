@@ -4,6 +4,7 @@ import nexmo
 import json
 
 def handler(event, context):
+    print "DEBUG: %s" % (json.dumps(event))
     private_key = event.get('nexmoKey')
     if private_key is None: 
         print "Private Key Missing."
@@ -20,6 +21,8 @@ def handler(event, context):
         print "Method Missing"
         return {}
 
+    uuid = event.get('uuid')
+
     kwargs = event.get('kwargs')
 
     client = nexmo.Client(application_id=application_id, private_key=private_key)
@@ -27,7 +30,12 @@ def handler(event, context):
     if m is None:
         print "Invalid Method"
         return {}
-    if kwargs is None:
+    if uuid is not None:
+        if kwargs is None:
+            return m(uuid)
+        else:
+            return m(uuid, kwargs)
+    elif kwargs is None:
         return m()
     else:
         print json.dumps(kwargs, indent=2)
