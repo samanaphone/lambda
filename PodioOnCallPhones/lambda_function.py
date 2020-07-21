@@ -78,7 +78,13 @@ Eastern  = USTimeZone(-5, "Eastern",  "EST", "EDT")
 """
 Code extracted from Python documentation 
 https://docs.python.org/2/library/datetime.html
-
+Out:
+ Contact_info: {
+    'id': 'xxxx',
+    'name': 'xxxx',
+    'phones': [ '11111', '2222' ],
+    'mail': [ 'asdf@xxxx', 'qwer@eeeee' ]
+ }
 End
 """
 def extract_contact(u):
@@ -111,6 +117,14 @@ def notnone(val1, val2, default):
         return default
 
 def lambda_handler(event, context):
+'''
+Out:
+    {
+        'primary': { !!Contact_info!! },
+        'backup': { !!Contact_info!! },
+        'manager': { !! Contact_info!! }
+    }
+'''
     global config
 
     contacts = {
