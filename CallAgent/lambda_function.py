@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(0, "./lib")
-import nexmo
+from vonage import Client, Voice
 import re
 import json
 import boto3
@@ -24,15 +24,15 @@ def db_addcall_queue(uuid, data, t, p):
             "time": t,
             "data": data
         })
-        print "result=%s" % json.dumps(result)
+        print( "result=%s" % json.dumps(result))
     except:
-        print "Unable to register call into Queue"
+        print( "Unable to register call into Queue")
 
 
 def handler(event, context):
     global config
     try:
-        print sys._getframe().f_code.co_name + " " + json.dumps(event)
+        print( sys._getframe().f_code.co_name + " " + json.dumps(event))
 
         config = db.Table(config_table).get_item(Key={ 
                 "Key": "Config" 
@@ -58,14 +58,16 @@ def handler(event, context):
         if caller_id is None:
             raise Exception("Invalid CallerID")
 
-        print "starting communication with nexmo"
+        print( "starting communication with nexmo")
 
         aurl           = config['outboundAnswerURL']
         eurl           = config['outboundEventURL']
         private_key    = '\n'.join(config['nexmoKey'].split('\\n'))
 
-        client = nexmo.Client(application_id=config['nexmoAppID'], private_key=private_key)
-        agent_call_data = client.create_call({ 
+        client = Client(key=config["vonageAPIKey"], secret=config["vonageAPISecret"], \
+            application_id=config['nexmoAppID'], private_key=private_key)
+        v = Voice(client)
+        call_data = {
             "to": [{
                 'type':'phone', 
                 'number': phone
@@ -77,13 +79,15 @@ def handler(event, context):
             'answer_url': [ aurl ], 
             'event_url' : [ eurl ],
             'ringing_timer': int(config['ringTimer']),
-            'machine_detection': 'hangup'
-        })
-        print "calling: " + json.dumps(agent_call_data)
+            'machine_detection': 'continue'
+        }
+        agent_call_data = v.create_call(call_data)
+
+        print( "calling: " + json.dumps(agent_call_data))
         db_addcall_queue(agent_call_data['uuid'], agent_call_data, t, phone)
     except Exception as e:
-        print "Exception: " + json.dumps(e.args)
+        print( "Exception: " + json.dumps(e.args))
         agent_call_data = { 'error': e.args[0] }
 
-    print "Finished."
+    print( "Finished.")
     return agent_call_data

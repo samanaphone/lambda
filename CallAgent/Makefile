@@ -5,7 +5,7 @@ ARN=$(shell cat $(CONF_PATH)/role_arn.txt)
 TIMEOUT=$(shell cat $(CONF_PATH)/timeout.txt)
 VARIABLES=$(shell cat $(CONF_PATH)/variables.txt)
 
-$(FUNCTION_NAME): lib/nexmo/__init__.py
+$(FUNCTION_NAME): lib/vonage/__init__.py
 	zip -r $(FUNCTION_NAME).zip * -x Makefile $(FUNCTION_NAME).zip
 
 install: $(FUNCTION_NAME)
@@ -18,8 +18,8 @@ clean:
 lib:
 	mkdir lib
 
-lib/nexmo/__init__.py: lib
-	pip install nexmo -t lib
+lib/vonage/__init__.py: lib
+	pip3 install vonage -t lib
 
 config:
 	aws lambda update-function-configuration \
