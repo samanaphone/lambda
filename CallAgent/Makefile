@@ -4,6 +4,7 @@ CONF_PATH=$(PACKAGE_PATH)/../etc
 ARN=$(shell cat $(CONF_PATH)/role_arn.txt)
 TIMEOUT=$(shell cat $(CONF_PATH)/timeout.txt)
 VARIABLES=$(shell cat $(CONF_PATH)/variables.txt)
+CURRENT_DIR=$(shell pwd)
 
 $(FUNCTION_NAME): lib/vonage/__init__.py
 	zip -r $(FUNCTION_NAME).zip * -x Makefile $(FUNCTION_NAME).zip
@@ -15,11 +16,8 @@ clean:
 	rm -Rf lib
 	rm -f $(FUNCTION_NAME).zip
 
-lib:
-	mkdir lib
-
-lib/vonage/__init__.py: lib
-	pip3 install vonage -t lib
+lib/vonage/__init__.py:
+	docker run --rm --mount type=bind,source=$(CURRENT_DIR),target=/usr/src samanaphone:focal pip3 install vonage -t /usr/src/lib
 
 config:
 	aws lambda update-function-configuration \
@@ -31,7 +29,7 @@ config:
           --memory-size 128 \
           --vpc-config "{\"SubnetIds\":[],\"SecurityGroupIds\":[]}" \
           --environment $(VARIABLES) \
-          --runtime "python2.7" \
+          --runtime "python3.8" \
           --tracing-config Mode="PassThrough"
 
 print:

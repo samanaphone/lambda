@@ -19,7 +19,7 @@ def handler(event, context):
         out = db.Table(config['outboundQueueTable']).scan()
         count = out['Count']
         for i in out['Items']:
-            print json.dumps(i)
+            print(json.dumps(i))
             p = bytearray()
             p.extend(json.dumps({
                 'nexmoKey': config['nexmoKey'],
@@ -33,13 +33,13 @@ def handler(event, context):
                 Payload=p
                 )
             payload = json.load(response['Payload'])
-            print json.dumps(payload)
+            print(json.dumps(payload))
             if payload['status'] != 'ringing' or payload['status'] != 'answered':
                 response = db.Table(config['outboundQueueTable']).delete_item(Key={'uuid': i['uuid']})
                 count -= 1
 
     except Exception as e:
-        print "ERROR(%s:%d): %s %s" % (sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, type(e).__name__, e.args[0])
+        print("ERROR(%s:%d): %s %s" % (sys._getframe().f_code.co_name, 
+                    sys._getframe().f_lineno, type(e).__name__, e.args[0]))
 
     return count

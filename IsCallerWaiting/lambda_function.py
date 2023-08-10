@@ -21,9 +21,10 @@ def handler(event, context):
         uuid = out['Items'][0]['uuid']
         caller = db.Table(config['InboundCallTable']).get_item(
                 Key={ 'uuid': uuid})['Item']['status']
+        print("DEBUG: status=%s" % caller)
     except Exception as e:
-        print "ERROR(%s:%d): %s %s" % (sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, type(e).__name__, e.args[0])
+        print("ERROR(%s:%d): %s %s" % (sys._getframe().f_code.co_name, 
+            sys._getframe().f_lineno, type(e).__name__, e.args[0]))
 
     if caller == 'waiting':
         return 1

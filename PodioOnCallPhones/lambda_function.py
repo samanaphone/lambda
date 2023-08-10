@@ -117,7 +117,7 @@ def notnone(val1, val2, default):
         return default
 
 def lambda_handler(event, context):
-'''
+    '''
 Out:
     {
         'primary': { !!Contact_info!! },
@@ -221,6 +221,6 @@ Out:
             contacts['manager'] = notnone(itms_escalation_data, oncall_escalation_data, [default_contact])
 
     except Exception as e:
-        print "ERROR(lambda_handler): %s %s" % (type(e).__name__, e.args[0])
+        print("ERROR(lambda_handler): %s %s" % (type(e).__name__, e.args[0]))
 
     return contacts

@@ -19,7 +19,8 @@ lib:
 	mkdir lib
 
 lib/requests/__init__.py: lib
-	pip install requests -t lib
+	python3 -m pip install urllib3==1.26.7 requests -t lib
+	python3 -m pip install six -t lib
 
 config:
 	aws lambda update-function-configuration \

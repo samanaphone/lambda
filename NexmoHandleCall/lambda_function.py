@@ -17,7 +17,6 @@ def handler(event, context):
     
     global app_url
     global config
-    app_url = "https://" + event['params']['header']['Host'] + "/" + event['context']['stage']
     try:
 
         config = db.Table(config_table).get_item(Key={ 
@@ -28,6 +27,7 @@ def handler(event, context):
                 sys._getframe().f_lineno, 
                 json.dumps(event))
 
+        app_url = "https://" + event['params']['header']['Host'] + "/" + event['context']['stage']
         qs = event['context']['resource-path'].split('/')
         action = qs[1]
         direction = qs[2]
@@ -160,7 +160,7 @@ def inbound_answer(nexmodata):
         },
         {
             "action": "conversation",
-            "name": "samana-support",
+            "name": "samana-support-1",
             "startOnEnter": "false",
             "musicOnHoldUrl": [ config['moh'] ]
         }
@@ -281,7 +281,7 @@ def outbound_answer(nexmodata):
         },
         {
             "action": "conversation",
-            "name": "samana-support",
+            "name": "samana-support-1",
             "startOnEnter": True
         }#,
 #        {
@@ -639,22 +639,22 @@ def debug(funcname, lineno, msg):
     if 'logLevel' not in config:
         return
     if config['logLevel'] >= 3:
-        print "DEBUG(%s:%d): %s" % (funcname, lineno, msg)
+        print("DEBUG(%s:%d): %s" % (funcname, lineno, msg))
 
 def info(funcname, lineno, msg):
     if 'logLevel' not in config:
         return
     if config['logLevel'] >= 2:
-        print "INFO(%s:%d) %s" %  (funcname, lineno, msg)
+        print("INFO(%s:%d) %s" %  (funcname, lineno, msg))
 
 def warn(funcname, lineno, msg):
     if 'logLevel' not in config:
         return
     if config['logLevel'] >= 1:
-        print "WARN(%s:%d): %s" % (funcname, lineno, msg)
+        print("WARN(%s:%d): %s" % (funcname, lineno, msg))
 
 def error(funcname, lineno, msg):
-    print "ERROR(%s:%d): %s" % (funcname, lineno, msg)
+    print("ERROR(%s:%d): %s" % (funcname, lineno, msg))
 
 ch = {
     'inbound_answer'     : inbound_answer,
@@ -679,4 +679,3 @@ ch = {
     'outbound_dtmf'      : outbound_dtmf,
     'outbound_human'     : outbound_human
 }
-
