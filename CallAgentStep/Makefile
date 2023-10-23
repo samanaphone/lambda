@@ -24,7 +24,7 @@ config:
           --memory-size 128 \
           --vpc-config "{\"SubnetIds\":[],\"SecurityGroupIds\":[]}" \
           --environment $(VARIABLES) \
-          --runtime "python2.7" \
+          --runtime "python3.11" \
           --tracing-config Mode="PassThrough"
 
 print:

@@ -25,3 +25,8 @@ unzip awscliv2.zip
 ./aws/install
 mkdir -p /root/.aws
 cp /usr/src/config /usr/src/credentials /root/.aws
+
+# Build container
+`docker build -t samanaphone .`
+# Run container
+`docker run -e AWS_ACCESS_KEY_ID=XXXXXX -e AWS_SECRET_ACCESS_KEY=XXXXX AWS_DEFAULT_REGION=us-east-1 -v $(pwd):/usr/src/samanaphone -idt --name samanaphone samanaphone /bin/bash`

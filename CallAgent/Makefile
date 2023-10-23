@@ -17,7 +17,7 @@ clean:
 	rm -f $(FUNCTION_NAME).zip
 
 lib/vonage/__init__.py:
-	docker run --rm --mount type=bind,source=$(CURRENT_DIR),target=/usr/src samanaphone:focal pip3 install vonage -t /usr/src/lib
+	python3 -m pip install vonage -t lib
 
 config:
 	aws lambda update-function-configuration \
@@ -29,7 +29,7 @@ config:
           --memory-size 128 \
           --vpc-config "{\"SubnetIds\":[],\"SecurityGroupIds\":[]}" \
           --environment $(VARIABLES) \
-          --runtime "python3.8" \
+          --runtime "python3.11" \
           --tracing-config Mode="PassThrough"
 
 print:

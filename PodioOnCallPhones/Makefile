@@ -19,19 +19,19 @@ lib:
 	mkdir lib
 
 lib/pypodio2: lib
-	pip install pypodio2 -t lib
+	python3 -m pip install git+https://github.com/podio/podio-py.git@master -t lib
 
 config:
 	aws lambda update-function-configuration \
           --function-name $(FUNCTION_NAME) \
           --role "$(ARN)" \
-          --handler "lambda_function.handler" \
+          --handler "lambda_function.lambda_handler" \
           --description "" \
           --timeout $(TIMEOUT) \
           --memory-size 128 \
           --vpc-config "{\"SubnetIds\":[],\"SecurityGroupIds\":[]}" \
           --environment $(VARIABLES) \
-          --runtime "python2.7" \
+          --runtime "python3.11" \
           --tracing-config Mode="PassThrough"
 
 print:

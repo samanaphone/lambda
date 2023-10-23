@@ -57,12 +57,14 @@ def handler(event, context):
             response = inbound_undefined(nexmodata)
 
     except KeyError as e:
-        error(sys._getframe().f_code.co_name, 
+        error(sys._getframe().f_code.co_name,
             sys._getframe().f_lineno,
-            "ERROR: Invalid Key %s" % e.args[0])
+            "Invalid Key %s" % " ".join(e.args))
         response = {}
     except Exception as e:
-        error(e.args[0], e.args[1], e.args[3])
+        error(sys._getframe().f_code.co_name,
+            sys._getframe().f_lineno,
+            "%s" % (" ".join(e.args)))
         response = {}
     finally:
         debug(sys._getframe().f_code.co_name, 
@@ -75,9 +77,6 @@ def handler(event, context):
 #########################
 
 def inbound_sip_hangup(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     if(nexmodata['body']['direction'] == 'outbound'):
         try:
             caller_uuid = db.Table(config['outboundCallTable']).get_item(
@@ -105,37 +104,19 @@ def inbound_sip_hangup(nexmodata):
                 "Unknown error. %s" % e.args[0])
     return {}
 
-# Function will onlly log
 def inbound_ringing(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(event))
     return {}
 
-# Function will onlly log
 def inbound_started(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(event))
     return {}
 
-# Function will onlly log
 def inbound_dtmf(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     return {}
 
 def inbound_undefined(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     return {}
 
 def inbound_answer(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     return [
         { 
             "action": "stream",
@@ -160,17 +141,13 @@ def inbound_answer(nexmodata):
         },
         {
             "action": "conversation",
-            "name": "samana-support-1",
+            "name": config['conversationName'],
             "startOnEnter": "false",
             "musicOnHoldUrl": [ config['moh'] ]
         }
     ]
 
 def inbound_answered(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
-
     try:
         agent_data = get_phones()
         db_register_inbound(nexmodata, agent_data)
@@ -200,18 +177,11 @@ def inbound_answered(nexmodata):
     return {}
 
 def inbound_completed(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
-
     db_complete_inbound(nexmodata)
     db_remcall_queue(nexmodata['uuid'])
     return {}
 
 def inbound_recording(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     try:
         out = db.Table("InboundQueue").scan()
         if out['Count'] == 0: 
@@ -240,32 +210,16 @@ def inbound_recording(nexmodata):
 # Outbound Handler
 #########################
 
-# Function will onlly log
 def outbound_started(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     return {}
 
-# Function will onlly log
 def outbound_machine(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     return {}
 
-# Function will onlly log
 def outbound_ringing(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     return {}
 
 def outbound_answer(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
-
     return [
         { 
             "action": "stream",
@@ -297,10 +251,6 @@ def outbound_answer(nexmodata):
         ]
 
 def outbound_dtmf(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
-
     if nexmodata['timed_out']:
         warn(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
@@ -316,23 +266,17 @@ def outbound_dtmf(nexmodata):
             },
             {
                 "action": "conversation",
-                "name": "samana-support",
+                "name": config['conversationName'],
                 "startOnEnter": True
             }]
 
     return response
 
 def outbound_human(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     db_connect_inbound(nexmodata)
     return {}
 
 def outbound_answered(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     try:
         db.Table("AgentCalls").update_item(
             Key                      = { "uuid": nexmodata['uuid'] },
@@ -352,9 +296,6 @@ def outbound_answered(nexmodata):
         return response
 
 def outbound_completed(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     try:
         table = db.Table("AgentCalls")
         response = {}
@@ -398,41 +339,26 @@ def outbound_completed(nexmodata):
         return response
 
 def outbound_timeout(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     db_update_outbound(nexmodata, 'failed', False)
     db_remcall_outqueue(nexmodata['uuid'])
     return {}
 
 def outbound_failed(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     db_update_outbound(nexmodata, 'failed', False)
     db_remcall_outqueue(nexmodata['uuid'])
     return {}
 
 def outbound_rejected(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     db_update_outbound(nexmodata, 'rejected', False)
     db_remcall_outqueue(nexmodata['uuid'])
     return {}
 
 def outbound_unanswered(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     db_update_outbound(nexmodata, 'unanswered', False)
     db_remcall_outqueue(nexmodata['uuid'])
     return {}
 
 def outbound_busy(nexmodata):
-    debug(sys._getframe().f_code.co_name, 
-            sys._getframe().f_lineno, 
-            json.dumps(nexmodata))
     db_update_outbound(nexmodata, 'busy', False)
     db_remcall_outqueue(nexmodata['uuid'])
     return {}
@@ -446,7 +372,6 @@ def get_phones():
         response = client.invoke(
             FunctionName='PodioOnCallPhones',
             InvocationType='RequestResponse')
-        # TODO implement
         out = json.loads(response['Payload'].read())
 
     except Exception as e:
@@ -459,7 +384,8 @@ def get_phones():
 def db_addcall_queue(uuid, inbound_phone, conversation_uuid):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s inbound_phone=%s conversation_uuid=%s" %
+            (config['InboundCallTable'], inbound_phone, conversation_uuid))
     try:
         db.Table(config['InboundQueueTable']).put_item(Item={
             "uuid": uuid,
@@ -474,7 +400,7 @@ def db_addcall_queue(uuid, inbound_phone, conversation_uuid):
 def db_remcall_queue(uuid):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['InboundCallTable'], uuid))
     try:
         db.Table(config['InboundQueueTable']).delete_item(
             Key={ "uuid": uuid }
@@ -487,7 +413,7 @@ def db_remcall_queue(uuid):
 def db_remcall_outqueue(uuid):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['InboundCallTable'], uuid))
     try:
         db.Table(config['outboundQueueTable']).delete_item(
             Key={ "uuid": uuid }
@@ -500,7 +426,7 @@ def db_remcall_outqueue(uuid):
 def db_register_inbound(nexmodata, agent_data):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['InboundCallTable'], nexmodata['uuid']))
     try:
         db.Table(config['InboundCallTable']).put_item(Item={
             "uuid": nexmodata['uuid'],
@@ -521,7 +447,7 @@ def db_register_inbound(nexmodata, agent_data):
 def db_complete_inbound(nexmodata):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['InboundCallTable'], nexmodata['uuid']))
     try:
         db.Table(config['InboundCallTable']).update_item(
             Key={ "uuid": nexmodata['uuid'] },
@@ -544,7 +470,7 @@ def db_complete_inbound(nexmodata):
 def db_connect_inbound(nexmodata):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['InboundCallTable'], nexmodata['uuid']))
     try:
         caller_uuid = db.Table(config['outboundCallTable']).get_item(
             Key={ 'uuid': nexmodata['call_uuid']})['Item']['caller_uuid']
@@ -568,7 +494,7 @@ def db_connect_inbound(nexmodata):
 def db_register_outbound(agent_call_data, phones):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s agent_call_data=%s" % (config['outboundCallTable'], json.dumps(agent_call_data)))
     try:
         table = db.Table(config['outboundCallTable'])
         newcall_data = table.put_item(Item={
@@ -591,7 +517,7 @@ def db_register_outbound(agent_call_data, phones):
 def db_update_outbound(nexmodata, status, answered):
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['outboundCallTable'], nexmodata['uuid']))
     try:
         out = db.Table(config['outboundCallTable']).update_item(
             Key                      = { 
@@ -617,7 +543,7 @@ def db_update_outbound(nexmodata, status, answered):
 def db_error_outbound():
     debug(sys._getframe().f_code.co_name, 
             sys._getframe().f_lineno, 
-            "start")
+            "start table=%s uuid=%s" % (config['outboundCallTable'], nexmodata['uuid']))
     try:
         table = db.Table(config['outboundCallTable'])
         table.update_item(
@@ -636,21 +562,15 @@ def db_error_outbound():
             "Unable to update outbound call. %s" % e.args[0])
 
 def debug(funcname, lineno, msg):
-    if 'logLevel' not in config:
-        return
-    if config['logLevel'] >= 3:
+    if config.get('logLevel', 0) >= 3:
         print("DEBUG(%s:%d): %s" % (funcname, lineno, msg))
 
 def info(funcname, lineno, msg):
-    if 'logLevel' not in config:
-        return
-    if config['logLevel'] >= 2:
+    if config.get('logLevel', 0) >= 2:
         print("INFO(%s:%d) %s" %  (funcname, lineno, msg))
 
 def warn(funcname, lineno, msg):
-    if 'logLevel' not in config:
-        return
-    if config['logLevel'] >= 1:
+    if config.get('logLevel', 0) >= 1:
         print("WARN(%s:%d): %s" % (funcname, lineno, msg))
 
 def error(funcname, lineno, msg):
