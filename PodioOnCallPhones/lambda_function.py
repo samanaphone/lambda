@@ -118,13 +118,13 @@ def notnone(val1, val2, default):
 
 def lambda_handler(event, context):
     '''
-Out:
-    {
-        'primary': { !!Contact_info!! },
-        'backup': { !!Contact_info!! },
-        'manager': { !! Contact_info!! }
-    }
-'''
+    Out:
+        {
+            'primary': { !!Contact_info!! },
+            'backup': { !!Contact_info!! },
+            'manager': { !! Contact_info!! }
+        }
+    '''
     global config
 
     contacts = {
